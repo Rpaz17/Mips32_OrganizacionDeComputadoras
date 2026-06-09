@@ -1,0 +1,12 @@
+# Generated files
+*.exe
+
+# Build directories
+bin/
+obj/
+build/
+Debug/
+Release/
+
+# Ignore dependency folders
+node_modules/
