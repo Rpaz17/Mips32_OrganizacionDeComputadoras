@@ -16,6 +16,10 @@
 #include "vga/Keypad.h"
 #include "Timer.h"
 
+#include "CliArgs/CliArgs.hpp"
+#include "CPU/file_loader.h"
+#include "CPU/CPU.h"
+
 #include <array>
 #include <atomic>
 #include <cstdint>
@@ -48,6 +52,31 @@ inline constexpr std::array<uint8_t, 16> kDefaultVGAPalette = {
 
 int main(int argc, char *argv[])
 {
+    CliArgs args(argc, argv);
+
+    if (auto error = args.parse())
+    {
+        std::cerr << error.value() << std::endl;
+        args.printUsage(std::cerr);
+        return EXIT_FAILURE;
+    }
+
+    std::vector<uint32_t> instructions;
+    try
+    {
+        instructions = FileLoader::loadInstructions(args.machineCodeFile());
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error loading machine code: " << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    std::cout << "Programa cargado correctamente.\n";
+    std::cout << "Cantidad de instrucciones: " << instructions.size() << "\n";
+
+    CPU cpu;
+    cpu.loadProgram(instructions);
     // 06112026 add CliArgs to main
     if (argc < 2)
     {
@@ -73,7 +102,7 @@ int main(int argc, char *argv[])
     VGATextWindow window(VGA_WINDOW_WIDTH, VGA_WINDOW_HEIGHT, keypad);
 
     // Load font from file (format auto-detected by VGAFont)
-    if (!window.initDisplay(framebuffer, argv[1], kDefaultVGAPalette))
+    if (!window.initDisplay(framebuffer, args.fontPath(), kDefaultVGAPalette))
     {
         std::cerr << "Failed to initialize VGA display.\n";
         return EXIT_FAILURE;

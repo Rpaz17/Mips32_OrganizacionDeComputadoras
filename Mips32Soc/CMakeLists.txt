@@ -40,8 +40,15 @@ target_link_libraries(vgatext PUBLIC
 # ============================================================================
 # vga_test — demo / test executable
 # ============================================================================
-add_executable(vga_test main.cpp
-    vga/VGAFramebuffer.cpp)
+add_executable(Mips32Soc
+    vga_text main.cpp
+    vga/VGAFramebuffer.cpp
+    main.cpp
+    CliArgs/CliArgs.cpp
+    CPU/cpu.cpp
+    CPU/alu.cpp
+    CPU/memory.cpp
+    CPU/file_loader.cpp)
 
 target_link_libraries(vga_test PRIVATE
     vgatext
@@ -66,6 +73,7 @@ endif()
 # Optional: Address Sanitizer (-DENABLE_ASAN=ON)
 # ============================================================================
 option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
+
 if(ENABLE_ASAN)
     target_compile_options(vgatext PRIVATE -fsanitize=address -fno-omit-frame-pointer)
     target_link_libraries(vgatext PUBLIC -fsanitize=address)
