@@ -18,7 +18,7 @@
 
 #include "CliArgs/CliArgs.hpp"
 #include "CPU/file_loader.h"
-#include "CPU/CPU.h"
+#include "CPU/cpu.h"
 
 #include <array>
 #include <atomic>
@@ -52,19 +52,19 @@ inline constexpr std::array<uint8_t, 16> kDefaultVGAPalette = {
 
 int main(int argc, char *argv[])
 {
-    CliArgs args(argc, argv);
+    CliArgs args(argc, const_cast<const char **>(argv));
 
     if (auto error = args.parse())
     {
         std::cerr << error.value() << std::endl;
-        args.printUsage(std::cerr);
+        args.printUsage();
         return EXIT_FAILURE;
     }
 
     std::vector<uint32_t> instructions;
     try
     {
-        instructions = FileLoader::loadInstructions(args.machineCodeFile());
+        instructions = FileLoader::loadInstructions(args.machineCode());
     }
     catch (const std::exception &e)
     {
@@ -101,8 +101,9 @@ int main(int argc, char *argv[])
 
     VGATextWindow window(VGA_WINDOW_WIDTH, VGA_WINDOW_HEIGHT, keypad);
 
+    std::string fontPath = args.fontPath();
     // Load font from file (format auto-detected by VGAFont)
-    if (!window.initDisplay(framebuffer, args.fontPath(), kDefaultVGAPalette))
+    if (!window.initDisplay(framebuffer, fontPath.c_str(), kDefaultVGAPalette))
     {
         std::cerr << "Failed to initialize VGA display.\n";
         return EXIT_FAILURE;

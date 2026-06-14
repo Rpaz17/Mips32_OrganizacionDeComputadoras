@@ -40,14 +40,12 @@ target_link_libraries(vgatext PUBLIC
 # ============================================================================
 # vga_test — demo / test executable
 # ============================================================================
-add_executable(Mips32Soc
-    vga_text main.cpp
-    vga/VGAFramebuffer.cpp
+add_executable(vga_test
     main.cpp
+    vga/VGAFramebuffer.cpp
     CliArgs/CliArgs.cpp
     CPU/cpu.cpp
     CPU/alu.cpp
-    CPU/memory.cpp
     CPU/file_loader.cpp)
 
 target_link_libraries(vga_test PRIVATE
