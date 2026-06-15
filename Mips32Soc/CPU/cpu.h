@@ -25,6 +25,8 @@ private:
     RegisterFile registers;
 
     void execRType(const RFormat &instruction);
+    void execIType(const IFormat &instruction);
+    void execJType(const JFormat &instruction);
 };
 
 #endif

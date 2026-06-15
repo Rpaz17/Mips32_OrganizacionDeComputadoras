@@ -27,6 +27,8 @@ void CPU::step()
 
     uint32_t raw = instructions[index];
 
+    uint32_t nextPc = pc + 4;
+
     InstFormat format = Instruction_Decoder::getFormat(raw);
 
     switch (format)
@@ -38,14 +40,25 @@ void CPU::step()
         break;
     }
     case InstFormat::I_TYPE:
-        throw std::runtime_error("IFormat not applied yet...");
+    {
+        IFormat decoded = Instruction_Decoder::decoderI(raw);
+        execIType(decoded);
+        break;
+    }
     case InstFormat::J_TYPE:
-        throw std::runtime_error("JFormat not applied yet...");
+    {
+        JFormat decoded = Instruction_Decoder::decoderJ(raw);
+        execJType(decoded);
+        break;
+    }
     default:
         throw std::runtime_error("Unknown format ^ 3 ^");
     }
 
-    pc += 4;
+    if (pc == index * 4)
+    {
+        pc = nextPc;
+    }
 }
 
 void CPU::setReg(uint8_t index, uint32_t value)
@@ -61,7 +74,7 @@ uint32_t CPU::getReg(uint8_t index) const
 void CPU::execRType(const RFormat &instruction)
 {
     if (instruction.opcode != 0x00)
-        throw std::runtime_error("The instruction isn't RFormt!");
+        throw std::runtime_error("The instruction isn't RFormat!");
 
     uint32_t rsVal = registers.read(instruction.rs);
     uint32_t rtVal = registers.read(instruction.rt);
@@ -70,6 +83,31 @@ void CPU::execRType(const RFormat &instruction)
     {
     case 0x00:
         // nop
+        registers.write(instruction.rd, ALU::sll(rtVal, instruction.shamt));
+        break;
+    case 0x02:
+        // srl
+        registers.write(instruction.rd, ALU::srl(rtVal, instruction.shamt));
+        break;
+    case 0x03:
+        // sra
+        registers.write(instruction.rd, ALU::sra(rtVal, instruction.shamt));
+        break;
+    case 0x04:
+        // sllv
+        registers.write(instruction.rd, ALU::sll(rtVal, rsVal & 0x1F));
+        break;
+    case 0x06:
+        // srlv
+        registers.write(instruction.rd, ALU::srl(rtVal, rsVal & 0x1F));
+        break;
+    case 0x07:
+        // srav
+        registers.write(instruction.rd, ALU::sra(rtVal, rsVal & 0x1F));
+        break;
+    case 0x08:
+        // jr
+        pc = rsVal;
         break;
     case 0x20:
         // add
@@ -100,11 +138,11 @@ void CPU::execRType(const RFormat &instruction)
         registers.write(instruction.rd, ALU::bitwiseXor(rsVal, rtVal));
         break;
     case 0x2A:
-        // slt
+        // slt signed
         registers.write(instruction.rd, ALU::slt(rsVal, rtVal));
         break;
     case 0x2B:
-        // sltu
+        // sltu unsigned
         registers.write(instruction.rd, ALU::sltu(rsVal, rtVal));
         break;
     default:

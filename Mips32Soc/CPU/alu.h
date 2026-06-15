@@ -18,6 +18,10 @@ public:
 
     static uint32_t slt(uint32_t a, uint32_t b);
     static uint32_t sltu(uint32_t a, uint32_t b);
+
+    static uint32_t sll(uint32_t value, uint8_t shamt);
+    static uint32_t srl(uint32_t value, uint8_t shamt);
+    static uint32_t sra(uint32_t value, uint8_t shamt);
 };
 
 #endif

@@ -44,3 +44,18 @@ uint32_t ALU::sltu(uint32_t a, uint32_t b)
 {
     return a < b ? 1 : 0;
 }
+
+uint32_t ALU::sll(uint32_t value, uint8_t shamt)
+{
+    return value << shamt;
+}
+
+uint32_t ALU::srl(uint32_t value, uint8_t shamt)
+{
+    return value >> shamt;
+}
+
+uint32_t ALU::sra(uint32_t value, uint8_t shamt)
+{
+    return static_cast<uint32_t>(static_cast<int32_t>(value) >> shamt);
+}
