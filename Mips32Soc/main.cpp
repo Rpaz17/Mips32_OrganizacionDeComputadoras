@@ -77,6 +77,18 @@ int main(int argc, char *argv[])
 
     CPU cpu;
     cpu.loadProgram(instructions);
+
+    try
+    {
+        for (size_t i = 0; i < instructions.size(); i++)
+        {
+            cpu.step();
+        }
+    }
+    catch (const std::exception &e)
+    {
+        std::cout << "CPU stopped: " << e.what() << std::endl;
+    }
     // 06112026 add CliArgs to main
     if (argc < 2)
     {

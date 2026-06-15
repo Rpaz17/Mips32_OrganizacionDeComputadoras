@@ -1,8 +1,22 @@
 #include "cpu.h"
 
 #include <stdexcept>
+#include <cstdint>
 
 #include "alu.h"
+
+namespace
+{
+    int32_t signedExtend16(uint16_t value)
+    {
+        return static_cast<int16_t>(value);
+    }
+
+    uint32_t zeroExtend16(uint16_t value)
+    {
+        return static_cast<uint32_t>(value);
+    }
+}
 
 void CPU::loadProgram(const std::vector<uint32_t> &program)
 {
@@ -147,5 +161,90 @@ void CPU::execRType(const RFormat &instruction)
         break;
     default:
         throw std::runtime_error("RFormat function not created yet");
+    }
+}
+
+void CPU::execIType(const IFormat &instruction)
+{
+    uint32_t rsVal = registers.read(instruction.rs);
+
+    switch (instruction.opcode)
+    {
+    case 0x08:
+    {
+        // addi rt = rs + sign_ext(imm)
+        int32_t imm = signedExtend16(instruction.immediate);
+        uint32_t result = static_cast<uint32_t>(static_cast<int32_t>(rsVal) + imm);
+        registers.write(instruction.rt, result);
+        break;
+    }
+    case 0x09:
+    {
+        // addiu rt = rs + sign_ext(imm)
+        int32_t imm = signedExtend16(instruction.immediate);
+        registers.write(instruction.rt, rsVal + static_cast<uint32_t>(imm));
+        break;
+    }
+    case 0x0A:
+    {
+        // slti rt = (rs < sign_ext(imm)) ? 1 : 0
+        int32_t imm = signedExtend16(instruction.immediate);
+        registers.write(instruction.rt, static_cast<int32_t>(rsVal < imm ? 1 : 0));
+        break;
+    }
+    case 0x0B:
+    {
+        // sltiu rt = (rs < sign_ext(imm)) ? 1 : 0 unsigned compare
+        int32_t imm = signedExtend16(instruction.immediate);
+        registers.write(instruction.rt, rsVal < imm ? 1 : 0);
+        break;
+    }
+    case 0x0C:
+    {
+        // andi rt = rs & zero_ext(imm)
+        int32_t imm = signedExtend16(instruction.immediate);
+        registers.write(instruction.rt, rsVal & imm);
+        break;
+    }
+    case 0x0D:
+    {
+        // ori rt = rs | zero_ext(immm)
+        int32_t imm = signedExtend16(instruction.immediate);
+        registers.write(instruction.rt, rsVal | imm);
+        break;
+    }
+    case 0x0E:
+    {
+        // xori rt = rs ^ zero_exit(imm)
+        int32_t imm = signedExtend16(instruction.immediate);
+        registers.write(instruction.rt, rsVal ^ imm);
+        break;
+    }
+    case 0x0F:
+    {
+        // lui rt = imm << 16
+        registers.write(instruction.rt, static_cast<uint32_t>(instruction.immediate) << 16);
+        break;
+    }
+    default:
+        throw std::runtime_error("IFormat opcode not created yet ^ _ ^");
+        break;
+    }
+}
+
+void CPU::execJType(const JFormat &instruction)
+{
+    switch (instruction.opcode)
+    {
+    case 0x02:
+        // j
+        pc = (pc & 0xF0000000) | (instruction.address << 2);
+        break;
+    case 0x03:
+        registers.write(31, pc + 4);
+        pc = (pc & 0xF0000000) | (instruction.address << 2);
+        break;
+    default:
+        throw std::runtime_error("JFormat not done yet ^ 6 ^");
     }
 }
