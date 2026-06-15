@@ -102,7 +102,6 @@ int main(int argc, char *argv[])
     VGATextWindow window(VGA_WINDOW_WIDTH, VGA_WINDOW_HEIGHT, keypad);
 
     std::string fontPath = args.fontPath();
-    // Load font from file (format auto-detected by VGAFont)
     if (!window.initDisplay(framebuffer, fontPath.c_str(), kDefaultVGAPalette))
     {
         std::cerr << "Failed to initialize VGA display.\n";

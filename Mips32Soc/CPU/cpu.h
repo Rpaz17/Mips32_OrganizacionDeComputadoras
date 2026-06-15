@@ -4,6 +4,9 @@
 #include <cstdint>
 #include <vector>
 
+#include "register_file.h"
+#include "instruction_decoder.h"
+
 class CPU
 {
 public:
@@ -18,9 +21,10 @@ public:
 private:
     uint32_t pc = 0;
     std::vector<uint32_t> instructions;
-    std::array<uint32_t, 32> registers{};
 
-    void execRType(uint32_t instruction);
+    RegisterFile registers;
+
+    void execRType(const RFormat &instruction);
 };
 
 #endif
