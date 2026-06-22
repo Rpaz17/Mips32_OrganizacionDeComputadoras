@@ -8,5 +8,7 @@ build/
 Debug/
 Release/
 
+*.bin
+
 # Ignore dependency folders
 node_modules/

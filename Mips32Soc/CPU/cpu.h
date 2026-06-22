@@ -3,10 +3,12 @@
 
 #include <cstdint>
 #include <vector>
+#include <mutex>
 #include "memory.h"
 
 #include "register_file.h"
 #include "instruction_decoder.h"
+#include "../vga/VGAFramebuffer.h"
 
 class CPU
 {
@@ -19,6 +21,8 @@ public:
 
     void setReg(uint8_t index, uint32_t value);
     uint32_t getReg(uint8_t index) const;
+
+    void connectVGA(VGAFramebuffer *framebuff, std::mutex *mut);
 
 private:
     uint32_t pc = 0;

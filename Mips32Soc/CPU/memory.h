@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <vector>
 #include <stdexcept>
+#include <mutex>
 
 #include "../vga/VGAFramebuffer.h"
 
@@ -13,6 +14,7 @@ private:
     std::vector<uint8_t> memory;
 
     VGAFramebuffer *vgaFrameBuffer = nullptr;
+    std::mutex *vgamut = nullptr;
 
     uint32_t translate(uint32_t address) const
     {
@@ -27,16 +29,16 @@ private:
         {
             throw std::runtime_error("Data memory offset out of range");
         }
-        return false;
+        return offset;
     }
 
 public:
     static constexpr uint32_t DATA_BASE = 0x10000000;
     static constexpr uint32_t DATA_SIZE = 0x2000;
-    static constexpr uint32_t VGA_BASE = 0x00000000;
+    static constexpr uint32_t VGA_BASE = 0x0000B800;
     static constexpr uint32_t VGA_END = 0x0000CABF;
 
-    void connectVGA(VGAFramebuffer *framebuff);
+    void connectVGA(VGAFramebuffer *framebuff, std::mutex *mut);
     bool isVGAaddr(uint32_t addr) const;
     void storeVGAHalf(uint32_t addr, uint16_t value);
 

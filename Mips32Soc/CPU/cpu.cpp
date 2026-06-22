@@ -111,6 +111,11 @@ uint32_t CPU::getReg(uint8_t index) const
     return registers.read(index);
 }
 
+void CPU::connectVGA(VGAFramebuffer *framebuff, std::mutex *mut)
+{
+    dataM.connectVGA(framebuff, mut);
+}
+
 void CPU::execRType(const RFormat &instruction)
 {
     if (instruction.opcode != 0x00)

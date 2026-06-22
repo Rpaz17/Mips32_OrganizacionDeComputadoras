@@ -78,9 +78,30 @@ int main(int argc, char *argv[])
     CPU cpu;
     cpu.loadProgram(instructions);
 
+    Keypad keypad;
+    VGAFramebuffer framebuffer;
+    Timer timer;
+    std::mutex FBmut;
+
+    cpu.connectVGA(&framebuffer, &FBmut);
+
+    VGATextWindow window(VGA_WINDOW_WIDTH, VGA_WINDOW_HEIGHT, keypad);
+
+    std::string fontPath = args.fontPath();
+
+    if (!window.initDisplay(framebuffer, fontPath.c_str(), kDefaultVGAPalette))
+    {
+        std::cerr << "Failed to initialize VGA display.\n";
+        return EXIT_FAILURE;
+    }
+
+    window.redraw();
+
+    int safetyCounter = 0;
+
     try
     {
-        int safetyCounter = 0;
+
         while (cpu.canStep() && safetyCounter < 1000)
         {
             cpu.step();
@@ -109,20 +130,12 @@ int main(int argc, char *argv[])
         ~SDLGuard() { SDL_Quit(); }
     } sdlGuard;
 
-    Keypad keypad;
-    VGAFramebuffer framebuffer;
-    Timer timer;
-
-    VGATextWindow window(VGA_WINDOW_WIDTH, VGA_WINDOW_HEIGHT, keypad);
-
-    std::string fontPath = args.fontPath();
-    if (!window.initDisplay(framebuffer, fontPath.c_str(), kDefaultVGAPalette))
-    {
-        std::cerr << "Failed to initialize VGA display.\n";
-        return EXIT_FAILURE;
-    }
-
+    FBmut.lock();
+    framebuffer.commitFrame();
     window.redraw();
+    FBmut.unlock();
+
+    window.run();
 
     std::atomic<bool> needsCommitFrame{false};
 
