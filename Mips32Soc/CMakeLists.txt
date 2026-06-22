@@ -46,7 +46,8 @@ add_executable(vga_test
     CliArgs/CliArgs.cpp
     CPU/cpu.cpp
     CPU/alu.cpp
-    CPU/file_loader.cpp)
+    CPU/file_loader.cpp
+    CPU/memory.cpp)
 
 target_link_libraries(vga_test PRIVATE
     vgatext

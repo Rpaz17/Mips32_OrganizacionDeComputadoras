@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <vector>
+#include "memory.h"
 
 #include "register_file.h"
 #include "instruction_decoder.h"
@@ -13,6 +14,7 @@ public:
     CPU() = default;
 
     void loadProgram(const std::vector<uint32_t> &program);
+    bool canStep();
     void step();
 
     void setReg(uint8_t index, uint32_t value);
@@ -23,6 +25,7 @@ private:
     std::vector<uint32_t> instructions;
 
     RegisterFile registers;
+    DataMemory dataM;
 
     void execRType(const RFormat &instruction);
     void execIType(const IFormat &instruction);

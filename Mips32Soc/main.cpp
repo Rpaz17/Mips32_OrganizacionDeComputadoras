@@ -80,9 +80,11 @@ int main(int argc, char *argv[])
 
     try
     {
-        for (size_t i = 0; i < instructions.size(); i++)
+        int safetyCounter = 0;
+        while (cpu.canStep() && safetyCounter < 1000)
         {
             cpu.step();
+            safetyCounter++;
         }
     }
     catch (const std::exception &e)

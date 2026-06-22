@@ -16,6 +16,21 @@ namespace
     {
         return static_cast<uint32_t>(value);
     }
+
+    int32_t signedExtended8(uint8_t value)
+    {
+        return static_cast<int8_t>(value);
+    }
+
+    int32_t signedExtendedHalf(uint16_t value)
+    {
+        return static_cast<uint16_t>(value);
+    }
+
+    int32_t branchOffs(uint16_t imm)
+    {
+        return signedExtend16(imm) << 2;
+    }
 }
 
 void CPU::loadProgram(const std::vector<uint32_t> &program)
@@ -23,6 +38,16 @@ void CPU::loadProgram(const std::vector<uint32_t> &program)
     instructions = program;
     pc = 0;
     registers.reset();
+    dataM.reset();
+}
+
+bool CPU::canStep()
+{
+    if (pc % 4 != 0)
+        return false;
+
+    uint32_t index = pc / 4;
+    return index < instructions.size();
 }
 
 void CPU::step()
@@ -41,6 +66,7 @@ void CPU::step()
 
     uint32_t raw = instructions[index];
 
+    uint32_t oldPc = pc;
     uint32_t nextPc = pc + 4;
 
     InstFormat format = Instruction_Decoder::getFormat(raw);
@@ -69,7 +95,7 @@ void CPU::step()
         throw std::runtime_error("Unknown format ^ 3 ^");
     }
 
-    if (pc == index * 4)
+    if (pc == oldPc)
     {
         pc = nextPc;
     }
@@ -170,6 +196,48 @@ void CPU::execIType(const IFormat &instruction)
 
     switch (instruction.opcode)
     {
+    case 0x04:
+    {
+        // beq
+        uint32_t rtVal = registers.read(instruction.rt);
+
+        if (rsVal == rtVal)
+        {
+            pc = pc + 4 + static_cast<uint32_t>(branchOffs(instruction.immediate));
+        }
+
+        break;
+    }
+    case 0x05:
+    {
+        // bne
+        uint32_t rtVal = registers.read(instruction.rt);
+
+        if (rsVal != rtVal)
+        {
+            pc = pc + 4 + static_cast<uint32_t>(branchOffs(instruction.immediate));
+        }
+
+        break;
+    }
+    case 0x06:
+    {
+        // blez
+        if (static_cast<int32_t>(rsVal) <= 0)
+        {
+            pc = pc + 4 + static_cast<uint32_t>(branchOffs(instruction.immediate));
+        }
+        break;
+    }
+    case 0x07:
+    {
+        // bgtz
+        if (static_cast<int32_t>(rsVal) > 0)
+        {
+            pc = pc + 4 + static_cast<uint32_t>(branchOffs(instruction.immediate));
+        }
+        break;
+    }
     case 0x08:
     {
         // addi rt = rs + sign_ext(imm)
@@ -189,34 +257,38 @@ void CPU::execIType(const IFormat &instruction)
     {
         // slti rt = (rs < sign_ext(imm)) ? 1 : 0
         int32_t imm = signedExtend16(instruction.immediate);
-        registers.write(instruction.rt, static_cast<int32_t>(rsVal < imm ? 1 : 0));
+        registers.write(
+            instruction.rt,
+            static_cast<int32_t>(rsVal) < imm ? 1 : 0);
         break;
     }
     case 0x0B:
     {
         // sltiu rt = (rs < sign_ext(imm)) ? 1 : 0 unsigned compare
-        int32_t imm = signedExtend16(instruction.immediate);
-        registers.write(instruction.rt, rsVal < imm ? 1 : 0);
+        uint32_t imm = static_cast<uint32_t>(signedExtend16(instruction.immediate));
+        registers.write(
+            instruction.rt,
+            rsVal < imm ? 1 : 0);
         break;
     }
     case 0x0C:
     {
         // andi rt = rs & zero_ext(imm)
-        int32_t imm = signedExtend16(instruction.immediate);
+        int32_t imm = zeroExtend16(instruction.immediate);
         registers.write(instruction.rt, rsVal & imm);
         break;
     }
     case 0x0D:
     {
         // ori rt = rs | zero_ext(immm)
-        int32_t imm = signedExtend16(instruction.immediate);
+        int32_t imm = zeroExtend16(instruction.immediate);
         registers.write(instruction.rt, rsVal | imm);
         break;
     }
     case 0x0E:
     {
         // xori rt = rs ^ zero_exit(imm)
-        int32_t imm = signedExtend16(instruction.immediate);
+        int32_t imm = zeroExtend16(instruction.immediate);
         registers.write(instruction.rt, rsVal ^ imm);
         break;
     }
@@ -224,6 +296,110 @@ void CPU::execIType(const IFormat &instruction)
     {
         // lui rt = imm << 16
         registers.write(instruction.rt, static_cast<uint32_t>(instruction.immediate) << 16);
+        break;
+    }
+    case 0x20:
+    {
+        // lb rt = signExt(MEM[rs+imm][7:0])
+        int32_t offs = signedExtend16(instruction.immediate);
+        uint32_t add = rsVal + static_cast<uint32_t>(offs);
+
+        uint8_t value = dataM.loadByte(add);
+
+        registers.write(
+            instruction.rt,
+            static_cast<uint32_t>(signedExtended8(value)));
+        break;
+    }
+    case 0x21:
+    {
+        // lh rt = signExt(MEM[rs + imm][15:0])
+        int32_t offs = signedExtend16(instruction.immediate);
+        uint32_t add = rsVal + static_cast<uint32_t>(offs);
+
+        uint16_t value = dataM.loadHalf(add);
+
+        registers.write(
+            instruction.rt,
+            static_cast<uint32_t>(signedExtendedHalf(value)));
+
+        break;
+    }
+    case 0x23:
+    {
+        // lw rt = MEM[rs + imm]
+        int32_t offs = signedExtend16(instruction.immediate);
+        uint32_t add = rsVal + static_cast<uint32_t>(offs);
+
+        uint32_t value = dataM.loadWord(add);
+
+        registers.write(
+            instruction.rt, value);
+
+        break;
+    }
+    case 0x24:
+    {
+        // lbu rt = zeroExt(MEM[rs + imm][7:0])
+        int32_t offs = signedExtend16(instruction.immediate);
+        uint32_t add = rsVal + static_cast<uint32_t>(offs);
+
+        uint8_t value = dataM.loadByte(add);
+
+        registers.write(
+            instruction.rt,
+            static_cast<uint32_t>(value));
+        break;
+    }
+    case 0x25:
+    {
+        // lhu rt = signExt(MEM[rs + imm][15:0])
+        int32_t offs = signedExtend16(instruction.immediate);
+        uint32_t add = rsVal + static_cast<uint32_t>(offs);
+
+        uint16_t value = dataM.loadHalf(add);
+
+        registers.write(
+            instruction.rt,
+            static_cast<uint32_t>(value));
+
+        break;
+    }
+    case 0x28:
+    {
+        // sb MEM[rs + imm][7:0] = rt [7:0]
+        int32_t offs = signedExtend16(instruction.immediate);
+        uint32_t add = rsVal + static_cast<uint32_t>(offs);
+
+        uint32_t rtVal = registers.read(instruction.rt);
+
+        dataM.storeByte(
+            add,
+            static_cast<uint8_t>(rtVal & 0xFF));
+        break;
+    }
+    case 0x29:
+    {
+        // sh MEM[rs + imm][15:0] = rt [15:0]
+        int32_t offs = signedExtend16(instruction.immediate);
+        uint32_t add = rsVal + static_cast<uint32_t>(offs);
+
+        uint32_t rtVal = registers.read(instruction.rt);
+
+        dataM.storeHalf(
+            add,
+            static_cast<uint16_t>(rtVal & 0xFFFF));
+        break;
+    }
+    case 0X2B:
+    {
+        // sw MEM[rs + imm] = rt
+        int32_t offs = signedExtend16(instruction.immediate);
+        uint32_t add = rsVal + static_cast<uint32_t>(offs);
+
+        uint32_t rtVal = registers.read(instruction.rt);
+
+        dataM.storeWord(add, rtVal);
         break;
     }
     default:
