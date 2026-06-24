@@ -7,6 +7,8 @@
 #include <mutex>
 
 #include "../vga/VGAFramebuffer.h"
+#include "../vga/Keypad.h"
+#include "../Timer.h"
 
 class DataMemory
 {
@@ -18,8 +20,8 @@ private:
     static constexpr uint32_t STACK_SIZE = 0X2000;
     static constexpr uint32_t STACK_BASE = STACK_TOP - STACK_SIZE + 4;
 
-    uint32_t keypadReg = 0;
-    uint32_t timerReg = 0;
+    const Keypad *keypad = nullptr;
+    const Timer *timer = nullptr;
 
     VGAFramebuffer *vgaFrameBuffer = nullptr;
     std::mutex *vgamut = nullptr;
@@ -75,9 +77,8 @@ public:
     void storeHalf(uint32_t add, uint16_t value);
     void storeWord(uint32_t add, uint32_t value);
 
-    void setKeypad(uint32_t v) { keypadReg = v; }
-    uint32_t getTimer() const { return timerReg; }
-    void setTimer(uint32_t ms) { timerReg = ms; }
+    void connectKeypad(const Keypad *k) { keypad = k; }
+    void connectTimer(const Timer *t) { timer = t; }
 
     void loadInitialData(const std::vector<uint8_t> &data)
     {

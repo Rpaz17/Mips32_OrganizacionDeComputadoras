@@ -132,6 +132,8 @@ int main(int argc, char *argv[])
 
     cpu.connectVGA(&framebuffer, &FBmut);
 
+    cpu.connectPeripherals(&keypad, &timer);
+
     VGATextWindow window(VGA_WINDOW_WIDTH, VGA_WINDOW_HEIGHT, keypad);
 
     std::string fontPath = args.fontPath();

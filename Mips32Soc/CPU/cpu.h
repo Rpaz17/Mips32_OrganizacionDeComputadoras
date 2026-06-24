@@ -25,6 +25,12 @@ public:
     void connectVGA(VGAFramebuffer *framebuff, std::mutex *mut);
     void loadData(const std::vector<uint8_t> &data);
 
+    void connectPeripherals(const Keypad *k, const Timer *t)
+    {
+        dataM.connectKeypad(k);
+        dataM.connectTimer(t);
+    }
+
 private:
     uint32_t pc = 0;
     std::vector<uint32_t> instructions;

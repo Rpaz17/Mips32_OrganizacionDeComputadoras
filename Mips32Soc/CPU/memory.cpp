@@ -70,9 +70,9 @@ uint32_t DataMemory::loadWord(uint32_t address) const
     if (address % 4 != 0)
         throw std::runtime_error("lw address isn't aligned to 4 bytes.");
     if (address == KEYPAD_ADDR)
-        return keypadReg;
+        return keypad ? static_cast<uint32_t>(keypad->state()) : 0;
     if (address == TIMER_ADDR)
-        return timerReg;
+        return timer ? timer->read() : 0;
     if (isStackAddre(address))
         return static_cast<uint32_t>(stackAt(address)) |
                (static_cast<uint32_t>(stackAt(address + 1)) << 8) |
