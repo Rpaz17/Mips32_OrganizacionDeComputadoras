@@ -3,6 +3,12 @@
 
 #include <cstdint>
 
+struct HiLo
+{
+    uint32_t hi;
+    uint32_t lo;
+};
+
 class ALU
 {
 public:
@@ -22,6 +28,11 @@ public:
     static uint32_t sll(uint32_t value, uint8_t shamt);
     static uint32_t srl(uint32_t value, uint8_t shamt);
     static uint32_t sra(uint32_t value, uint8_t shamt);
+
+    static HiLo mult(uint32_t a, uint32_t b);
+    static HiLo multu(uint32_t a, uint32_t b);
+    static HiLo div(uint32_t a, uint32_t b);
+    static HiLo divu(uint32_t a, uint32_t b);
 };
 
 #endif

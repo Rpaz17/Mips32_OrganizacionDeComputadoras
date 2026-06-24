@@ -59,3 +59,23 @@ uint32_t ALU::sra(uint32_t value, uint8_t shamt)
 {
     return static_cast<uint32_t>(static_cast<int32_t>(value) >> shamt);
 }
+
+HiLo ALU::mult(uint32_t a, uint32_t b)
+{
+    return HiLo();
+}
+
+HiLo ALU::multu(uint32_t a, uint32_t b)
+{
+    return HiLo();
+}
+
+HiLo ALU::div(uint32_t a, uint32_t b)
+{
+    return HiLo();
+}
+
+HiLo ALU::divu(uint32_t a, uint32_t b)
+{
+    return HiLo();
+}

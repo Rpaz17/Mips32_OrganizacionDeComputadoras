@@ -113,8 +113,8 @@ void DataMemory::storeWord(uint32_t add, uint32_t value)
 
     if (isVGAaddr(add))
     {
-        storeVGAHalf(add, static_cast<uint16_t>(value & 0xFFF));
-        storeVGAHalf(add + 2, static_cast<uint16_t>((value >> 16) & 0xFFF));
+        storeVGAHalf(add, static_cast<uint16_t>(value & 0xFFFF));
+        storeVGAHalf(add + 2, static_cast<uint16_t>((value >> 16) & 0xFFFF));
     }
 
     uint32_t offs = translate(add);

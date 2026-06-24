@@ -28,14 +28,37 @@ public:
         registers[index] = value;
     }
 
+    uint32_t readHI() const
+    {
+        return hi;
+    }
+
+    uint32_t readLO() const
+    {
+        return lo;
+    }
+
+    void writeHI(uint32_t value)
+    {
+        hi = value;
+    }
+
+    void writeLO(uint32_t value)
+    {
+        lo = value;
+    }
+
     void reset()
     {
         registers.fill(0);
+        hi = 0;
+        lo = 0;
     }
 
 private:
-    std::array<uint32_t, 32>
-        registers{};
+    std::array<uint32_t, 32> registers{};
+    uint32_t hi = 0;
+    uint32_t lo = 0;
 };
 
 #endif

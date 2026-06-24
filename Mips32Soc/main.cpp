@@ -50,6 +50,53 @@ inline constexpr std::array<uint8_t, 16> kDefaultVGAPalette = {
     0x0F, // 15: White
 };
 
+void fillAsciiTable(VGAFramebuffer &fb)
+{
+    for (size_t row = 0; row < VGA_ROWS; ++row)
+    {
+        const auto fg = static_cast<uint8_t>((row % 14) + 1);
+        for (size_t col = 0; col < VGA_COLS; ++col)
+        {
+            const char c = static_cast<char>(0x20 + ((row * VGA_COLS + col) % 96));
+            fb.writePixel(row, col, c, fg, 0x00);
+        }
+    }
+
+    fb.commitFrame();
+}
+
+void fillColorBars(VGAFramebuffer &fb)
+{
+    for (size_t row = 0; row < VGA_ROWS; ++row)
+    {
+        const auto bg = static_cast<uint8_t>(row % 16);
+        for (size_t col = 0; col < VGA_COLS; ++col)
+        {
+            const auto fg = static_cast<uint8_t>(col % 16);
+            fb.writePixel(row, col, '#', fg, bg);
+        }
+    }
+
+    fb.commitFrame();
+}
+
+void fillHelloWorld(VGAFramebuffer &fb)
+{
+    fb.clear(0x07, 0x00);
+
+    constexpr const char *message = "Hello, Organizacion de Computadoras!";
+    constexpr size_t msgLen = 35; // length of above string
+    constexpr size_t startRow = 14;
+    constexpr size_t startCol = (VGA_COLS - msgLen) / 2;
+
+    for (size_t i = 0; i < msgLen; ++i)
+    {
+        const auto fg = static_cast<uint8_t>(1 + (i % 15));
+        fb.writePixel(startRow, startCol + i, message[i], fg, 0x0F);
+    }
+    fb.commitFrame();
+}
+
 int main(int argc, char *argv[])
 {
     CliArgs args(argc, const_cast<const char **>(argv));
@@ -175,6 +222,15 @@ int main(int argc, char *argv[])
                 currentPattern = (currentPattern + 1) % 3;
                 switch (currentPattern)
                 {
+                case 0:
+                    fillHelloWorld(framebuffer);
+                    break;
+                case 1:
+                    fillAsciiTable(framebuffer);
+                    break;
+                case 2:
+                    fillColorBars(framebuffer);
+                    break;
                 }
                 window.redraw();
                 break;

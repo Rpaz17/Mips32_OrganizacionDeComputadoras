@@ -24,7 +24,7 @@ namespace
 
     int32_t signedExtendedHalf(uint16_t value)
     {
-        return static_cast<uint16_t>(value);
+        return static_cast<int16_t>(value);
     }
 
     int32_t branchOffs(uint16_t imm)
@@ -36,28 +36,38 @@ namespace
 void CPU::loadProgram(const std::vector<uint32_t> &program)
 {
     instructions = program;
-    pc = 0;
+    pc = 0x00004000;
     registers.reset();
+    registers.write(29, 0x7FFFEFFC);
     dataM.reset();
 }
 
 bool CPU::canStep()
 {
-    if (pc % 4 != 0)
+    static constexpr uint32_t INSTRUCTION_BASE = 0X00004000;
+
+    if (pc < INSTRUCTION_BASE || pc % 4 != 0)
         return false;
 
-    uint32_t index = pc / 4;
+    uint32_t index = (pc - INSTRUCTION_BASE) / 4;
     return index < instructions.size();
 }
 
 void CPU::step()
 {
+
+    static constexpr uint32_t INSTRUCTION_BASE = 00004000;
+    uint32_t index = (pc - INSTRUCTION_BASE) / 4;
+
     if (pc % 4 != 0)
     {
         throw std::runtime_error("PC is not aligned to 4 bytes");
     }
 
-    uint32_t index = pc / 4;
+    if (pc < INSTRUCTION_BASE)
+    {
+        throw std::runtime_error("PC below instruction memory base");
+    }
 
     if (index >= instructions.size())
     {
