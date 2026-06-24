@@ -12,24 +12,47 @@ class DataMemory
 {
 private:
     std::vector<uint8_t> memory;
+    std::vector<uint8_t> stackM;
+
+    static constexpr uint32_t STACK_TOP = 0X7FFFEFFC;
+    static constexpr uint32_t STACK_SIZE = 0X8000;
+    static constexpr uint32_t STACK_BASE = STACK_TOP - STACK_SIZE + 4;
+
+    uint32_t keypadReg = 0;
+    uint32_t timerReg = 0;
 
     VGAFramebuffer *vgaFrameBuffer = nullptr;
     std::mutex *vgamut = nullptr;
 
+    bool isDataAddr(uint32_t addr) const
+    {
+        return addr >= DATA_BASE && addr < DATA_BASE + DATA_SIZE;
+    }
+
+    bool isStackAddre(uint32_t addr) const
+    {
+        return addr >= STACK_BASE && addr <= STACK_TOP;
+    }
+
+    uint8_t &stackAt(uint32_t a)
+    {
+        return stackM[a - STACK_BASE];
+    }
+
+    const uint8_t &stackAt(uint32_t a) const
+    {
+        return stackM[a - STACK_BASE];
+    }
+
     uint32_t translate(uint32_t address) const
     {
-        if (address < DATA_BASE || address >= DATA_BASE + DATA_SIZE)
-        {
-            throw std::runtime_error("Data memory address out of range");
-        }
+        if (isDataAddr(address))
+            return address - DATA_BASE;
 
-        uint32_t offset = address - DATA_BASE;
+        if (isStackAddre(address))
+            return address - STACK_BASE - DATA_SIZE;
 
-        if (offset >= memory.size())
-        {
-            throw std::runtime_error("Data memory offset out of range");
-        }
-        return offset;
+        throw std::runtime_error("Data memory address out of range!");
     }
 
 public:
@@ -38,11 +61,14 @@ public:
     static constexpr uint32_t VGA_BASE = 0x0000B800;
     static constexpr uint32_t VGA_END = 0x0000CABF;
 
+    static constexpr uint32_t KEYPAD_ADDR = 0xFFFF0004;
+    static constexpr uint32_t TIMER_ADDR = 0xFFFF0008;
+
     void connectVGA(VGAFramebuffer *framebuff, std::mutex *mut);
     bool isVGAaddr(uint32_t addr) const;
     void storeVGAHalf(uint32_t addr, uint16_t value);
 
-    DataMemory() : memory(DATA_SIZE, 0) {}
+    DataMemory() : memory(DATA_SIZE, 0), stackM(STACK_SIZE, 0) {}
 
     void reset();
     uint8_t loadByte(uint32_t address) const;
@@ -51,6 +77,9 @@ public:
     void storeByte(uint32_t add, uint8_t value);
     void storeHalf(uint32_t add, uint16_t value);
     void storeWord(uint32_t add, uint32_t value);
+
+    void setKeypad(uint32_t v) { keypadReg = v; }
+    uint32_t getTimer() const { return timerReg; }
 };
 
 #endif

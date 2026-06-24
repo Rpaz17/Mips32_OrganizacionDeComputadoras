@@ -56,7 +56,7 @@ bool CPU::canStep()
 void CPU::step()
 {
 
-    static constexpr uint32_t INSTRUCTION_BASE = 00004000;
+    static constexpr uint32_t INSTRUCTION_BASE = 0x00004000;
     uint32_t index = (pc - INSTRUCTION_BASE) / 4;
 
     if (pc % 4 != 0)
@@ -199,6 +199,62 @@ void CPU::execRType(const RFormat &instruction)
     case 0x2B:
         // sltu unsigned
         registers.write(instruction.rd, ALU::sltu(rsVal, rtVal));
+        break;
+    case 0x10:
+        // mfhi
+        registers.write(instruction.rd, registers.readHI());
+        break;
+    case 0x12:
+        // mflo
+        registers.write(instruction.rd, registers.readLO());
+        break;
+    case 0x18:
+    {
+        // mult
+        HiLo r = ALU::mult(rsVal, rtVal);
+        registers.writeHI(r.hi);
+        registers.writeLO(r.lo);
+        break;
+    }
+    case 0x19:
+    {
+        // multu
+        HiLo r = ALU::multu(rsVal, rtVal);
+        registers.writeHI(r.hi);
+        registers.writeLO(r.lo);
+    }
+    case 0x1A:
+    {
+        // div
+        HiLo r = ALU::div(rsVal, rtVal);
+        registers.writeHI(r.hi);
+        registers.writeLO(r.lo);
+        break;
+    }
+    case 0x1B:
+    {
+        // divu
+        HiLo r = ALU::divu(rsVal, rtVal);
+        registers.writeHI(r.hi);
+        registers.writeLO(r.lo);
+        break;
+    }
+    case 0x09:
+        // jalr
+        registers.write(instruction.rd == 0 ? 31 : instruction.rd, pc + 4);
+        pc = rsVal;
+        break;
+    case 0x11:
+        // mthi
+        registers.writeHI(rsVal);
+        break;
+    case 0x13:
+        // mtlo
+        registers.writeLO(rsVal);
+        break;
+    case 0x27:
+        // nor
+        registers.write(instruction.rd, ~ALU::bitwiseOr(rsVal, rtVal));
         break;
     default:
         throw std::runtime_error("RFormat function not created yet");
