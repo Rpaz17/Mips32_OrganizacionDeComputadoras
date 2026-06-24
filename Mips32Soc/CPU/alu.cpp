@@ -1,8 +1,14 @@
 #include "alu.h"
+#include <stdexcept>
 
 uint32_t ALU::add(uint32_t a, uint32_t b)
 {
-    return static_cast<uint32_t>(static_cast<int32_t>(a) + static_cast<int32_t>(b));
+    int32_t sa = static_cast<int32_t>(a);
+    int32_t sb = static_cast<int32_t>(b);
+    if ((sb > 0 && sa > INT32_MAX - sb) ||
+        (sb < 0 && sa < INT32_MIN - sb))
+        throw std::overflow_error("Integer overflow in add");
+    return static_cast<uint32_t>(sa + sb);
 }
 
 uint32_t ALU::addu(uint32_t a, uint32_t b)
@@ -12,7 +18,12 @@ uint32_t ALU::addu(uint32_t a, uint32_t b)
 
 uint32_t ALU::sub(uint32_t a, uint32_t b)
 {
-    return static_cast<uint32_t>(static_cast<int32_t>(a) - static_cast<int32_t>(b));
+    int32_t sa = static_cast<int32_t>(a);
+    int32_t sb = static_cast<int32_t>(b);
+    if ((sb < 0 && sa > INT32_MAX + sb) ||
+        (sb > 0 && sa < INT32_MIN + sb))
+        throw std::overflow_error("Integer overflow in sub");
+    return static_cast<uint32_t>(sa - sb);
 }
 
 uint32_t ALU::subu(uint32_t a, uint32_t b)

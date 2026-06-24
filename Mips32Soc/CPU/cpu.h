@@ -23,6 +23,7 @@ public:
     uint32_t getReg(uint8_t index) const;
 
     void connectVGA(VGAFramebuffer *framebuff, std::mutex *mut);
+    void loadData(const std::vector<uint8_t> &data);
 
 private:
     uint32_t pc = 0;

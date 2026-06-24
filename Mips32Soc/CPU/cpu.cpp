@@ -126,6 +126,13 @@ void CPU::connectVGA(VGAFramebuffer *framebuff, std::mutex *mut)
     dataM.connectVGA(framebuff, mut);
 }
 
+void CPU::loadData(const std::vector<uint8_t> &data)
+{
+    for (size_t i = 0; i < data.size(); i++)
+        dataM.storeByte(static_cast<uint32_t>(DataMemory::DATA_BASE + i),
+                        data[i]);
+}
+
 void CPU::execRType(const RFormat &instruction)
 {
     if (instruction.opcode != 0x00)
@@ -222,6 +229,7 @@ void CPU::execRType(const RFormat &instruction)
         HiLo r = ALU::multu(rsVal, rtVal);
         registers.writeHI(r.hi);
         registers.writeLO(r.lo);
+        break;
     }
     case 0x1A:
     {
@@ -239,23 +247,6 @@ void CPU::execRType(const RFormat &instruction)
         registers.writeLO(r.lo);
         break;
     }
-    case 0x09:
-        // jalr
-        registers.write(instruction.rd == 0 ? 31 : instruction.rd, pc + 4);
-        pc = rsVal;
-        break;
-    case 0x11:
-        // mthi
-        registers.writeHI(rsVal);
-        break;
-    case 0x13:
-        // mtlo
-        registers.writeLO(rsVal);
-        break;
-    case 0x27:
-        // nor
-        registers.write(instruction.rd, ~ALU::bitwiseOr(rsVal, rtVal));
-        break;
     default:
         throw std::runtime_error("RFormat function not created yet");
     }
@@ -345,21 +336,21 @@ void CPU::execIType(const IFormat &instruction)
     case 0x0C:
     {
         // andi rt = rs & zero_ext(imm)
-        int32_t imm = zeroExtend16(instruction.immediate);
+        uint32_t imm = zeroExtend16(instruction.immediate);
         registers.write(instruction.rt, rsVal & imm);
         break;
     }
     case 0x0D:
     {
         // ori rt = rs | zero_ext(immm)
-        int32_t imm = zeroExtend16(instruction.immediate);
+        uint32_t imm = zeroExtend16(instruction.immediate);
         registers.write(instruction.rt, rsVal | imm);
         break;
     }
     case 0x0E:
     {
         // xori rt = rs ^ zero_exit(imm)
-        int32_t imm = zeroExtend16(instruction.immediate);
+        uint32_t imm = zeroExtend16(instruction.immediate);
         registers.write(instruction.rt, rsVal ^ imm);
         break;
     }

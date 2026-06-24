@@ -14,8 +14,8 @@ private:
     std::vector<uint8_t> memory;
     std::vector<uint8_t> stackM;
 
-    static constexpr uint32_t STACK_TOP = 0X7FFFEFFC;
-    static constexpr uint32_t STACK_SIZE = 0X8000;
+    static constexpr uint32_t STACK_TOP = 0x7FFFEFFC;
+    static constexpr uint32_t STACK_SIZE = 0X2000;
     static constexpr uint32_t STACK_BASE = STACK_TOP - STACK_SIZE + 4;
 
     uint32_t keypadReg = 0;
@@ -49,9 +49,6 @@ private:
         if (isDataAddr(address))
             return address - DATA_BASE;
 
-        if (isStackAddre(address))
-            return address - STACK_BASE - DATA_SIZE;
-
         throw std::runtime_error("Data memory address out of range!");
     }
 
@@ -80,6 +77,13 @@ public:
 
     void setKeypad(uint32_t v) { keypadReg = v; }
     uint32_t getTimer() const { return timerReg; }
+    void setTimer(uint32_t ms) { timerReg = ms; }
+
+    void loadInitialData(const std::vector<uint8_t> &data)
+    {
+        size_t count = std::min(data.size(), memory.size());
+        std::copy(data.begin(), data.begin() + count, memory.begin());
+    }
 };
 
 #endif
